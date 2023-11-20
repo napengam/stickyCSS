@@ -13,8 +13,9 @@ function makeSticky(id, config = null) {
     } else if (typeof id === 'object') {
         body = id.tBodies[0];
         theTable = id;
+        id = theTable.id;
     }
-    if (body === null) {
+    if (body === null || id === '') {
         return;
     }
     theTable.dataset.stickycols = 0;
