@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+            }
+            #t1{
+                border-collapse:collapse;
+                background-color:white;
+            }
+            #t1 td,#t1,th{
+                border:solid 1px black;
+            }
+            #t1 th{
+                background-color:silver;
+            }
+            #t1 td{
+                background-color:white;
+            }
+        </style>
+    </head>
+    <body>
+        <div id='toff' style='text-align:center;position:fixed;background-color:blue;width:100%;height:200px;z-Index:20;color:white'>Mimics a fixed top area</div>
+        <div id='loff' style='position:fixed;background-color:yellow;width:200px;height:100%;z-Index:20'>Mimics a fixed left area</div>
+        <div id='content'>
+            <table id='t1'>
+                <thead>
+                    <tr>
+                        <th colspan='4' style='position:sticky;left:0;text-align:center'> 111 </th> 
+                    <tr>
+                        <th>Name<br>Lastname</th>
+                        <th>Email</th>
+                        <th>Phone</th> <th>Phone</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>John Doe</td>
+                        <td>john@example.com</td>
+                        <td>123-456-7890</td> <td>123-456-7890</td>
+                    </tr>
+                    <tr>
+                        <td>John Doe</td>
+                        <td>john@example.com</td>
+                        <td>123-456-7890</td>  <td>123-456-7890</td>
+                    </tr>
+                    <tr>
+                        <td>John Doe</td>
+                        <td>john@example.com</td>
+                        <td>123-456-7890</td>  <td>123-456-7890</td>
+                    </tr>
+                    <tr>
+                        <td>John Doe</td>
+                        <td>john@example.com</td>
+                        <td>123-456-7890</td>  <td>123-456-7890</td>
+                    </tr>
+                    <tr>
+                        <td>John Doe</td>
+                        <td>john@example.com</td>
+                        <td>123-456-7890</td> <td>123-456-7890</td>
+                    </tr>
+                    <tr>
+                        <td>John Doe</td>
+                        <td>john@example.com</td>
+                        <td>123-456-7890</td>  <td>123-456-7890</td>
+                    </tr>
+                    <tr>
+                        <td>John Doe</td>
+                        <td>john@example.com</td>
+                        <td>123-456-7890</td>  <td>123-456-7890</td>
+                    </tr>
+                    <tr>
+                        <td>John Doe</td>
+                        <td>john@example.com</td>
+                        <td>123-456-7890</td>  <td>123-456-7890</td>
+                    </tr>
+
+                    <!-- Add more rows as needed -->
+                </tbody>
+            </table>
+        </div>
+        <div style='height:2000px;width:4000px'>just have scrollbarss</div>
+        <script src='stickyCSS.js'></script>
+        <script>
+            window.addEventListener('load', userStart, false);
+            function userStart() {
+                moveGUIElements('toff', 'loff', 'content')
+
+                makeSticky('t1', {col: 1, loff: 'loff', toff: 'toff'});
+
+                function moveGUIElements(top, left, content) {
+
+                    let rtop = document.getElementById(top).getBoundingClientRect();
+                    let rleft = document.getElementById(left).getBoundingClientRect();
+                    let rec = document.getElementById(content).getBoundingClientRect();
+
+                    //container below top and to the right of left 
+
+                    let topy = rec.top + rtop.top + rtop.height;
+                    let leftx = rec.left + rleft.left + rleft.width;
+                    content = document.getElementById(content);
+                    content.style.position = 'absolute';
+                    content.style.top = topy + 'px';
+                    content.style.left = leftx + 'px';
+
+                    // left below top
+
+                    left = document.getElementById(left);
+                    left.style.position = 'fixed';
+                    left.style.top = topy + 'px';
+
+                }
+
+            }
+        </script>
+    </body>
+</html>
