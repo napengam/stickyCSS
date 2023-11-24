@@ -1,10 +1,10 @@
 function makeSticky(id, config = null) {
-    var theTable, columns = [], innerHTML, body,
+    var theTable, innerHTML, body,
             styleElem, configDefault = {'col': 0, 'loff': 0, 'toff': 0}
     ;
     styleElem = document.createElement('STYLE');
     // *****************************************
-    // tabel given by id or direct as object
+    // table given by id or direct as object
     // ******************************************
 
     if (typeof id === 'string') {
@@ -20,7 +20,8 @@ function makeSticky(id, config = null) {
     }
     theTable.dataset.stickycols = 0;
     // *****************************************
-    // read config, at least defaults
+    // merge given config with default.
+    // This way we have allways a config
     // ******************************************
     config = Object.assign(configDefault, config);
 
@@ -36,15 +37,15 @@ function makeSticky(id, config = null) {
                 top:${config.toff}px;
                 z-index: 4;
             }`;
-    columns = '';
+
     if (config.col > 0) {
-        theTable.dataset.stickycols = config.col;
+        theTable.dataset.stickycols = config.col; // as info
         let l = 0;
         if (config.loff) {
             l = config.loff;
         }
         for (let i = 0; i < config.col; i++) {
-            columns += `
+            innerHTML += `
             #${id} td:nth-child(${i + 1}) {
                 position: sticky;
                 left: ${l}px;
@@ -58,9 +59,8 @@ function makeSticky(id, config = null) {
           `;
             l += body.rows[0].cells[i].clientWidth;
         }
-
     }
-    styleElem.innerHTML = innerHTML + columns;
+    styleElem.innerHTML = innerHTML;
     document.getElementsByTagName('head')[0].appendChild(styleElem);
 
     // *****************************************
@@ -78,8 +78,11 @@ function makeSticky(id, config = null) {
         let value = 0, rect = null, add = 0;
 
         if (typeof configAttrib === 'string' && configAttrib !== '') {
-            rect = document.getElementById(configAttrib).getBoundingClientRect();
-            value = document.getElementById(configAttrib)[what];
+            let obj = document.getElementById(configAttrib);
+            if (obj) {
+                rect = obj.getBoundingClientRect();
+                value = obj[what];
+            }
         } else if (typeof configAttrib === 'object') {
             rect = configAttrib.getBoundingClientRect();
             value = configAttrib[what];
