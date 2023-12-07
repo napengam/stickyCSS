@@ -15,7 +15,7 @@ function makeSticky(id, config = null) {
         theTable = id;
         id = theTable.id;
     }
-    if (body === null || id === '') {
+    if (body === null || id === '' || theTable.querySelector('thead') === null) {
         return;
     }
     theTable.dataset.stickycols = 0;
