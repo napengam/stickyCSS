@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0 minimum-scale=1 ">
         <style>
             body {
                 font-family: Arial, sans-serif;
@@ -11,7 +11,7 @@
                 border-collapse:collapse;
                 background-color:white;
             }
-            #t1 td,#t1,th{
+            #t1 td,#t1 th{
                 border:solid 1px black;
             }
             #t1 th{
@@ -23,8 +23,8 @@
         </style>
     </head>
     <body>
-        <div id='toff' style='text-align:center;position:fixed;background-color:blue;width:100%;height:200px;z-Index:20;color:white'>Mimics a fixed top area</div>
-        <div id='loff' style='position:fixed;background-color:yellow;width:200px;height:100%;z-Index:20'>Mimics a fixed left area</div>
+        <div id='toff' style='text-align:center;position:fixed;background-color:blue;width:100%;height:100px;z-Index:20;color:white'>Mimics a fixed top area</div>
+        <div id='loff' style='position:fixed;background-color:yellow;width:100px;height:100%;z-Index:20'>Mimics a fixed left area</div>
         <div id='content'>
             <table id='t1'>
                 <thead>
