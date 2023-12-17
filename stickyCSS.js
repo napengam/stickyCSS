@@ -111,7 +111,7 @@ function makeSticky(id, config = null) {
         }
         [].forEach.call(theTable.tHead.rows, (row) => {
             [].forEach.call(row.cells, (cell) => {
-                if (cell.colSpan > col || cell.cellIndex >= col) {
+                if (cell.style.position === 'sticky' && (cell.colSpan > col || cell.cellIndex >= col)) {
                     cell.style.position = 'static';
                 }
             });
