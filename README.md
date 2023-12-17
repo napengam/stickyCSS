@@ -66,7 +66,7 @@ Consider the following HTML:
 </table>
 ``` 
 You can make the table sticky with the following JavaScript code:
-```
+```javascript
 makeSticky('exampleTable', {
   toff: 10,
   loff: 20,

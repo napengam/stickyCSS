@@ -60,7 +60,7 @@ function makeSticky(id, config = null) {
             l += body.rows[0].cells[i].clientWidth;
         }
     }
-    styleElem.innerHTML = innerHTML;
+    styleElem.insertAdjacentHTML('beforeend', innerHTML);
     document.getElementsByTagName('head')[0].appendChild(styleElem);
 
     // *****************************************
