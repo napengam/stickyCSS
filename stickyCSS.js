@@ -1,7 +1,6 @@
 function makeSticky(id, config = null) {
-    var theTable, innerHTML, body,
-            styleElem, configDefault = {'col': 0, 'loff': 0, 'toff': 0}
-    ;
+    var theTable, innerHTML, body, styleElem;
+    
     styleElem = document.createElement('STYLE');
     // *****************************************
     // table given by id or direct as object
@@ -23,7 +22,7 @@ function makeSticky(id, config = null) {
     // merge given config with default.
     // This way we have allways a config
     // ******************************************
-    config = Object.assign(configDefault, config);
+    config = Object.assign({}, {'col': 0, 'loff': 0, 'toff': 0}, config);
 
     config.toff = getConfig(config.toff, 'clientHeight');
     config.loff = getConfig(config.loff, 'clientWidth');
