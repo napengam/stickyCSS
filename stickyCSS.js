@@ -1,6 +1,6 @@
 function makeSticky(id, config = null) {
     var theTable, innerHTML, body, styleElem;
-    
+
     styleElem = document.createElement('STYLE');
     // *****************************************
     // table given by id or direct as object
@@ -59,14 +59,23 @@ function makeSticky(id, config = null) {
             l += body.rows[0].cells[i].clientWidth;
         }
     }
-    styleElem.insertAdjacentHTML('beforeend', innerHTML);
-    document.getElementsByTagName('head')[0].appendChild(styleElem);
-
     // *****************************************
-    // remove stickyness for header cells that
-    // are out of scope because of colspan etc
-    // ******************************************      
-    removeSticky(theTable, config.col);
+    // hide the table to speed up work before
+    // the style is appended to the header
+    // ******************************************
+    theTable.style.display = 'none';
+    styleElem.insertAdjacentHTML('beforeend', innerHTML);
+    requestAnimationFrame(() => { 
+        // speed up work if there are many sticky columns  
+        document.getElementsByTagName('head')[0].appendChild(styleElem);
+        // *****************************************
+        // remove stickyness for header cells that
+        // are out of scope because of colspan etc
+        // ******************************************      
+        removeSticky(theTable, config.col);
+        theTable.style.display = '';
+    });
+
     return styleElem;
 
     // *****************************************
