@@ -1,7 +1,7 @@
 function makeSticky(id, config = null) {
     var theTable, innerHTML, body, styleElem;
 
-    styleElem = document.createElement('STYLE');
+
     // *****************************************
     // table given by id or direct as object
     // ******************************************
@@ -64,8 +64,9 @@ function makeSticky(id, config = null) {
     // the style is appended to the header
     // ******************************************
     theTable.style.display = 'none';
+    styleElem = document.createElement('STYLE');
     styleElem.insertAdjacentHTML('beforeend', innerHTML);
-    requestAnimationFrame(() => { 
+    requestAnimationFrame(() => {
         // speed up work if there are many sticky columns  
         document.getElementsByTagName('head')[0].appendChild(styleElem);
         // *****************************************
