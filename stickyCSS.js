@@ -1,130 +1,181 @@
-function makeSticky(id, config = null) {
-    var theTable, innerHTML, body, styleElem;
+function makeSticky(idobj, userConfig = null) {
+   
 
-
-    // *****************************************
-    // table given by id or direct as object
-    // ******************************************
-
-    if (typeof id === 'string') {
-        body = document.getElementById(id).tBodies[0];
-        theTable = document.getElementById(id);
-    } else if (typeof id === 'object') {
-        body = id.tBodies[0];
-        theTable = id;
-        id = theTable.id;
-    }
-    if (body === null || id === '' || theTable.querySelector('thead') === null) {
+    // ---------------------------------------------------------------------
+    // Wildcard handling (id prefix*)
+    // ---------------------------------------------------------------------
+    if (typeof idobj === 'string' && idobj.endsWith('*')) {
+        const prefix = idobj.slice(0, -1);
+        document
+            .querySelectorAll('table[id^="' + prefix + '"]')
+            .forEach(t => makeSticky(t, userConfig));
         return;
     }
-    theTable.dataset.stickycols = 0;
-    // *****************************************
-    // merge given config with default.
-    // This way we have allways a config
-    // ******************************************
-    config = Object.assign({}, {'col': 0, 'loff': 0, 'toff': 0}, config);
 
-    config.toff = getConfig(config.toff, 'clientHeight');
-    config.loff = getConfig(config.loff, 'clientWidth');
-    // *****************************************
-    // create style sheet
-    // ******************************************
+    const table = typeof idobj === 'string'
+        ? document.getElementById(idobj)
+        : idobj;
 
-    innerHTML = `
-            #${id} thead  {
-                position: sticky;
-                top:${config.toff}px;
-                z-index: 4;
-            }`;
-
-    if (config.col > 0) {
-        theTable.dataset.stickycols = config.col; // as info
-        let l = 0;
-        if (config.loff) {
-            l = config.loff;
-        }
-        for (let i = 0; i < config.col; i++) {
-            innerHTML += `
-            #${id} td:nth-child(${i + 1}) {
-                position: sticky;
-                left: ${l}px;
-                z-index: 3;               
-            }
-            #${id} th:nth-child(${i + 1}){
-                position: sticky;
-                left: ${l}px;
-                z-index: 3;              
-            }
-          `;
-            l += body.rows[0].cells[i].clientWidth;
-        }
+    if (!table || !table.tHead || !table.tBodies.length) {
+        return;
     }
-    // *****************************************
-    // hide the table to speed up work before
-    // the style is appended to the header
-    // ******************************************
-    theTable.style.display = 'none';
-    styleElem = document.createElement('STYLE');
-    styleElem.insertAdjacentHTML('beforeend', innerHTML);
-    requestAnimationFrame(() => {
-        // speed up work if there are many sticky columns  
-        document.getElementsByTagName('head')[0].appendChild(styleElem);
-        // *****************************************
-        // remove stickyness for header cells that
-        // are out of scope because of colspan etc
-        // ******************************************      
-        removeSticky(theTable, config.col);
-        theTable.style.display = '';
-    });
 
-    return styleElem;
-
-    // *****************************************
-    // get vaues 
-    // ******************************************
-
-    function getConfig(configAttrib, what) {
-        let value = 0, rect = null, add = 0;
-
-        if (typeof configAttrib === 'string' && configAttrib !== '') {
-            let obj = document.getElementById(configAttrib);
-            if (obj) {
-                rect = obj.getBoundingClientRect();
-                value = obj[what];
-            }
-        } else if (typeof configAttrib === 'object') {
-            rect = configAttrib.getBoundingClientRect();
-            value = configAttrib[what];
-        } else if (typeof configAttrib === 'number') {
-            value = configAttrib;
-        }
-
-        if (rect !== null) {
-            if (what === 'clientWidth') {
-                add = rect.left;
-            } else if (what === 'clientHeight') {
-                add = rect.top;
-            }
-        }
-        return value + add;
+    // ---------------------------------------------------------------------
+    // Idempotency / state
+    // ---------------------------------------------------------------------
+    if (table._stickyState) {
+        // reconfigure existing instance
+        table._stickyState.configure(userConfig);
+        return table._stickyState.api;
     }
-    // *****************************************
-    // remove stickyness from not related header
-    // cells 
-    // ******************************************
 
-    function removeSticky(theTable, col) {
+    // ---------------------------------------------------------------------
+    // Defaults & state
+    // ---------------------------------------------------------------------
+    const state = {
+        config: null,
+        styleEl: null,
+        resizeObserver: null
+    };
 
-        if (col <= 0) {
-            return;
+    const defaultConfig = {
+        col: 0,
+        loff: 0,
+        toff: 0
+    };
+
+    // ---------------------------------------------------------------------
+    // Config resolution helpers
+    // ---------------------------------------------------------------------
+    function resolveOffset(value, dimension) {
+        let base = 0;
+        let rect = null;
+
+        if (typeof value === 'number') {
+            base = value;
+        } else if (typeof value === 'string' && value) {
+            const el = document.getElementById(value);
+            if (el) {
+                base = el[dimension];
+                rect = el.getBoundingClientRect();
+            }
+        } else if (value && typeof value === 'object') {
+            base = value[dimension];
+            rect = value.getBoundingClientRect();
         }
-        [].forEach.call(theTable.tHead.rows, (row) => {
-            [].forEach.call(row.cells, (cell) => {
-                if (cell.style.position === 'sticky' && (cell.colSpan > col || cell.cellIndex >= col)) {
+
+        if (rect) {
+            base += dimension === 'clientWidth' ? rect.left : rect.top;
+        }
+
+        return base;
+    }
+
+    function normalizeConfig(cfg) {
+        const merged = Object.assign({}, defaultConfig, cfg || {});
+        return {
+            col: Math.max(0, merged.col | 0),
+            loff: resolveOffset(merged.loff, 'clientWidth'),
+            toff: resolveOffset(merged.toff, 'clientHeight')
+        };
+    }
+
+    // ---------------------------------------------------------------------
+    // Core build logic
+    // ---------------------------------------------------------------------
+    function build() {
+        destroyStyle();
+
+        const cfg = state.config;
+        const tbody = table.tBodies[0];
+        if (!tbody.rows.length) return;
+
+        let css = `#${table.id} thead{position:sticky;top:${cfg.toff}px;z-index:4;}`;
+
+        if (cfg.col > 0) {
+            let left = cfg.loff;
+            const refRow = tbody.rows[0];
+
+            for (let i = 0; i < cfg.col && refRow.cells[i]; i++) {
+                const w = refRow.cells[i].getBoundingClientRect().width;
+
+                css += `
+#${table.id} tbody td:nth-child(${i + 1}),
+#${table.id} thead th:nth-child(${i + 1}){
+    position:sticky;
+    left:${left}px;
+    z-index:3;
+}`;
+                left += w;
+            }
+        }
+
+        table.style.visibility = 'hidden';
+        state.styleEl = document.createElement('style');
+        state.styleEl.textContent = css;
+        document.head.appendChild(state.styleEl);
+
+        cleanupHeader(cfg.col);
+        table.style.visibility = '';
+    }
+
+    function cleanupHeader(col) {
+        if (col <= 0) return;
+        Array.from(table.tHead.rows).forEach(row => {
+            Array.from(row.cells).forEach(cell => {
+                if (
+                    cell.style.position === 'sticky' &&
+                    (cell.colSpan > col || cell.cellIndex >= col)
+                ) {
                     cell.style.position = 'static';
                 }
             });
+        });
+    }
+
+    // ---------------------------------------------------------------------
+    // Teardown helpers
+    // ---------------------------------------------------------------------
+    function destroyStyle() {
+        if (state.styleEl) {
+            state.styleEl.remove();
+            state.styleEl = null;
         }
-        );
-}
+    }
+
+    function destroy() {
+        destroyStyle();
+        if (state.resizeObserver) {
+            state.resizeObserver.disconnect();
+            state.resizeObserver = null;
+        }
+        delete table._stickyState;
+    }
+
+    // ---------------------------------------------------------------------
+    // Public API
+    // ---------------------------------------------------------------------
+    function configure(newConfig) {
+        state.config = normalizeConfig(newConfig);
+        build();
+    }
+
+    const api = {
+        rebuild: () => build(),
+        configure,
+        destroy
+    };
+
+    // ---------------------------------------------------------------------
+    // Initialization
+    // ---------------------------------------------------------------------
+    state.config = normalizeConfig(userConfig);
+    build();
+
+    // dynamic reflow
+    state.resizeObserver = new ResizeObserver(() => build());
+    state.resizeObserver.observe(table);
+
+    table._stickyState = { state, api, configure };
+    return api;
 }
